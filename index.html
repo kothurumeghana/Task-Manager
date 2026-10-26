@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Taskboard</title>
+<style>
+*{box-sizing:border-box;margin:0}body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:1.5rem 5%;min-height:100vh}
+h1{margin-bottom:1rem}form{display:flex;gap:.6rem;margin-bottom:1.5rem}
+input{flex:1;padding:.7rem 1rem;border-radius:10px;border:1px solid #334155;background:#1e293b;color:inherit;font:inherit}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:.7rem 1.2rem;background:#38bdf8;color:#082f49;font-weight:600}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.col{background:#1e293b;border-radius:14px;padding:1rem;min-height:300px;border:2px dashed transparent}.col.over{border-color:#38bdf8}
+.col h2{font-size:1rem;margin-bottom:.8rem;display:flex;justify-content:space-between}.col h2 span{color:#94a3b8}
+.t{background:#334155;padding:.75rem;border-radius:10px;margin-bottom:.6rem;cursor:grab;display:flex;justify-content:space-between;gap:.5rem}
+.t.drag{opacity:.4}.t button{background:none;color:#94a3b8;padding:0 .3rem}.t button:hover{color:#f87171}
+</style></head><body>
+<h1>Taskboard</h1>
+<form id="f"><input id="in" placeholder="What needs doing?" required><button>Add task</button></form>
+<div class="board" id="board"></div>
+<script>
+const cols=["To do","In progress","Done"],inp=document.getElementById("in"),board=document.getElementById("board");
+let tasks=JSON.parse(localStorage.getItem("tasks")||'[{"id":1,"t":"Design the landing page","c":0},{"id":2,"t":"Build the navbar","c":1},{"id":3,"t":"Set up the repo","c":2}]');
+const save=()=>{localStorage.setItem("tasks",JSON.stringify(tasks));draw()};
+function draw(){board.innerHTML="";cols.forEach((name,ci)=>{const col=document.createElement("div");col.className="col";
+const list=tasks.filter(t=>t.c==ci);col.innerHTML=`<h2>${name}<span>${list.length}</span></h2>`;
+list.forEach(t=>{const el=document.createElement("div");el.className="t";el.draggable=true;el.innerHTML=`<span></span><button aria-label="Delete task">✕</button>`;
+el.firstChild.textContent=t.t;el.lastChild.onclick=()=>{tasks=tasks.filter(x=>x.id!=t.id);save()};
+el.ondragstart=e=>{e.dataTransfer.setData("id",t.id);el.classList.add("drag")};el.ondragend=()=>el.classList.remove("drag");col.append(el)});
+col.ondragover=e=>{e.preventDefault();col.classList.add("over")};col.ondragleave=()=>col.classList.remove("over");
+col.ondrop=e=>{e.preventDefault();const t=tasks.find(x=>x.id==e.dataTransfer.getData("id"));if(t){t.c=ci;save()}};board.append(col)})}
+document.getElementById("f").onsubmit=e=>{e.preventDefault();tasks.push({id:Date.now(),t:inp.value.trim(),c:0});inp.value="";save()};
+draw();
+</script></body></html>
